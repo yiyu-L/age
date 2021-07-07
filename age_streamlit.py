@@ -5,8 +5,8 @@ import math
 import plotly.express as px
 import streamlit as st 
 import base64
+import io
 
-st.set_page_config( page_title="年龄阈值分析", page_icon = '👨‍🏭', initial_sidebar_state="collapsed", layout='wide' )
 
 @st.cache(persist=False, allow_output_mutation=True, suppress_st_warning=False, show_spinner= True)
 
@@ -84,43 +84,47 @@ def AI_threshold_set(df):
     return df
 
 
+if __name__ == "__main__":
+    st.set_page_config( page_title="年龄阈值分析", page_icon = '👨‍🏭', initial_sidebar_state="collapsed", layout='wide' )
+    
+    st.title('年龄阈值分析')
 
-st.title('年龄阈值分析')
-caching.clear_cache()
-df = pd.DataFrame()
+    caching.clear_cache()
+    df = pd.DataFrame()
 
-st.subheader('1.数据加载')
-st.write("请上传一个xlsx文件")
-with st.beta_expander('数据格式'):
-    mat_format = [['年龄','短文本','接受数字、“未登记”、以“Y/M/W/D/y/m/w/d/岁/月/周/天"结尾的文本，不在上述类型中的文本均被认为是年龄未知'], ['AI分值','数字','无'],['医生审核结果','短文本','含有“活动性肺结核”字样的文本，才认为是确诊。'],['无','无','建议增加一列附上数据的路径，如：studyUid、DCM文本路径'] ]
-    df_format = pd.DataFrame(mat_format, columns = ['字段名称','数据类型','说明'] )
-    st.table(df_format)
-input = st.file_uploader('请选择一个文件')
-if input is None:
-        sample = st.checkbox("从GitHub上下载demo.xlsx")
-try:
-    if sample:
-        st.markdown("""[下载链接](https://www.baidu.com/)""")    
-except:
-    if input:
-        with st.spinner('加载数据中...'):
-            df = load_data()
-with st.beta_expander('显示原始数据'):
-    st.write(df)
-df1 = prep_data(df)
+    st.subheader('1.数据加载')
+    st.write("请上传一个xlsx文件")
+    with st.beta_expander('数据格式'):
+        mat_format = [['年龄','短文本','接受数字、以“Y/M/W/D/y/m/w/d/岁/月/周/天"结尾的文本，不在上述类型中的文本均被认为是年龄未知'], ['AI分值','数字','无'],['医生审核结果','短文本','含有“活动性肺结核”字样的文本，才认为是确诊。'],['无','无','建议增加一列附上数据的路径，如：studyUid、DCM文本路径'] ]
+        df_format = pd.DataFrame(mat_format, columns = ['字段名称','数据类型','说明'] )
+        st.table(df_format)
+    input = st.file_uploader('请选择一个文件')
+    if input is None:
+            sample = st.checkbox("从GitHub上下载demo.xlsx")
+    try:
+        if sample:
+            st.markdown("""[下载链接](https://www.baidu.com/)""")    
+    except:
+       if input:
+           with st.spinner('加载数据中...'):
+                df = load_data()
+    with st.beta_expander('显示原始数据'):
+      st.write(df)
+    df1 = prep_data(df)
 
-st.subheader('2.年龄分布图')
-df1 = pd.DataFrame(df1)
-radar_chart_fig = age_bar(df1)
-st.plotly_chart(radar_chart_fig)
+    st.subheader('2.年龄分布图')
+    df1 = pd.DataFrame(df1)
+    radar_chart_fig = age_bar(df1)
+    st.plotly_chart(radar_chart_fig)
 
-st.subheader('3.不同年龄阈值的结果')
-AI_threshold = st.slider("AI阈值设置(%)", 0, 100)
-df2 = AI_threshold_set(df1)
-result = result_output(df2)
-st.write(result)
-df_export = pd.DataFrame(result)
-df_export= df_export.to_csv(decimal=',')
-b64 = base64.b64encode(df_export.encode()).decode()
-href = f'<a href="data:file/csv;base64,{b64}">Download CSV File</a> (**年龄阈值分析结果.csv**)'
-st.markdown(href, unsafe_allow_html=True)
+    st.subheader('3.不同年龄阈值的结果')
+    AI_threshold = st.slider("AI阈值设置(%)", 0, 100)
+    df2 = AI_threshold_set(df1)
+    result = result_output(df2)
+    st.write(result)
+    df_export = pd.DataFrame(result)
+    output = io.BytesIO()
+    df_export.to_excel(output, engine = 'openpyxl') 
+    b64 = base64.b64encode(output.getvalue())
+    href = f'<a download = "年龄阈值分析结果.xlsx" href="data:file/xlsx;base64,{b64}">Download XLSX File</a> (**年龄阈值分析结果.xlsx**)'
+    st.markdown(href, unsafe_allow_html=True)
