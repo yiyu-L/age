@@ -79,7 +79,7 @@ def result_output(df):
     for threshold_age in range(70):
         mat_low.append([threshold_age, *thre_compute( df[(df['年龄Y'] <= threshold_age)&(df['年龄Y'] >= 0)])])
     mat = np.hstack( (  np.array(mat_up), np.array(mat_low)  ) )
-    matr = pd.DataFrame( mat, columns = [['年龄阈值及以上的分析(包含年龄阈值)']*10 + ['年龄阈值及以下的分析(包含年龄阈值)'] * 10, ['年龄阈值', '样本数量', '阳性数量', '真阳', '真阴', '假阴', '假阳','假阴率', '假阳率', '阳性患者假阴率']*2 ] )
+    matr = pd.DataFrame( mat, columns = [['age threshold and above (including age threshold)']*10 + ['age threshold and below (including age threshold)'] * 10, ['age threshold', 'Number of samples', 'Number of positives', 'TP', 'TN', 'FN', 'FP','FN rate', 'FP rate', 'FN rate of positive patients']*2 ] )
     return matr
 
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         st.write(result)
         df_export = pd.DataFrame(result)
         output = io.BytesIO()
-        df_export.to_excel(output, engine = 'openpyxl') 
-        b64 = base64.b64encode(output.getvalue())
-        href = f'<a download = "年龄阈值分析结果.xlsx" href="data:file/xlsx;base64,{b64}">Download XLSX File</a> (**年龄阈值分析结果.xlsx**)'
+        excel = df_export.to_excel(output, engine = 'openpyxl') 
+        b64 = base64.b64encode(output.getvalue()).decode()
+        href = f'<a download = "年龄阈值分析结果.xlsx" href="data:file/csv;base64,{b64}">Download XLSX File</a> (**年龄阈值分析结果.xlsx**)'
         st.markdown(href, unsafe_allow_html=True)
